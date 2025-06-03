@@ -1,0 +1,42 @@
+{
+  "name": "@telegram-bot-web-app/frontend",
+  "version": "1.0.0",
+  "description": "React Frontend for Telegram Bot Web App",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.1",
+    "@tanstack/react-query": "^4.29.19",
+    "zustand": "^4.3.9",
+    "axios": "^1.4.0",
+    "react-hook-form": "^7.45.1",
+    "@hookform/resolvers": "^3.1.1",
+    "zod": "^3.21.4",
+    "clsx": "^1.2.1",
+    "lucide-react": "^0.263.1",
+    "@telegram-bot-web-app/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  }
+}

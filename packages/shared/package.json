@@ -1,0 +1,18 @@
+{
+  "name": "@telegram-bot-web-app/shared",
+  "version": "1.0.0",
+  "description": "Shared types and utilities for Telegram Bot Web App",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.3"
+  }
+}
