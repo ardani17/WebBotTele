@@ -32,7 +32,6 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
 jspm_packages/
 
 # TypeScript cache
@@ -83,7 +82,9 @@ dist
 
 # Gatsby files
 .cache/
-public
+# Comment in the public line in if your project uses Gatsby and not Next.js
+# https://nextjs.org/blog/next-9-1#public-directory-support
+# public
 
 # Vite build output
 dist/
@@ -93,10 +94,7 @@ dist-ssr/
 build/
 
 # Webpack build output
-build/
-
-# SvelteKit build output
-.svelte-kit
+webpack-stats.json
 
 # Storybook build outputs
 .out
@@ -106,6 +104,14 @@ storybook-static
 # Temporary folders
 tmp/
 temp/
+
+# Runtime data
+*.log
+logs
+*.log.*
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Runtime data
 pids
@@ -120,71 +126,26 @@ lib-cov
 coverage
 *.lcov
 
-# Logs
-logs
-*.log
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
-# Optional npm cache directory
-.npm
+# Prisma
+# Keep prisma/schema.prisma and migrations
+# But ignore generated client and other temp files
+apps/backend/prisma/generated/
+apps/backend/node_modules/.prisma/
 
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Vite build output
-dist/
-
-# Rollup build output
-build/
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# Editor directories and files
-.vscode/
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Database files (if using SQLite for development)
+*.db
+*.sqlite
+*.sqlite3
 
 # OS generated files
 .DS_Store
@@ -195,63 +156,208 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Prisma
-apps/backend/prisma/migrations/
-
-# Uploads
-uploads/
-files/
-storage/
-
-# Logs
-logs/
-*.log
-
-# Docker
-.dockerignore
-
-# Backup files
-*.backup
-*.bak
-
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Testing
+# Telegram Bot API specific
+# Bot API server data directory (contains sensitive data)
+telegram-bot-api-data/
+bot-api-data/
+
+# User uploaded files and bot data
+apps/backend/uploads/
+apps/backend/data/
+apps/backend/temp/
+apps/backend/storage/
+apps/backend/files/
+
+# Generated files from bot features
+apps/backend/src/telegram/temp/
+apps/backend/src/telegram/uploads/
+apps/backend/src/telegram/downloads/
+
+# OCR temporary files
+apps/backend/ocr-temp/
+apps/backend/tesseract-temp/
+
+# Archive temporary files
+apps/backend/archive-temp/
+apps/backend/extracted/
+
+# Workbook temporary files
+apps/backend/workbook-temp/
+apps/backend/excel-temp/
+
+# KML temporary files
+apps/backend/kml-temp/
+apps/backend/kml-output/
+
+# Geotags temporary files
+apps/backend/geotags-temp/
+apps/backend/processed-images/
+
+# Location service cache
+apps/backend/location-cache/
+
+# Logs from all services
+apps/backend/logs/
+apps/frontend/logs/
+*.log
+*.log.*
+
+# PM2 logs and configs
+ecosystem.config.js
+.pm2/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+
+# Certificate files (if any)
+*.pem
+*.key
+*.crt
+*.cert
+
+# API keys and secrets (additional protection)
+**/secrets/
+**/keys/
+**/.secrets/
+**/.keys/
+
+# Test files and coverage
+test-results/
 coverage/
 .nyc_output/
 
-# Build outputs
-dist/
-build/
-out/
+# Build artifacts
+apps/frontend/build/
+apps/backend/build/
+apps/backend/dist/
 
-# Package manager
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Package manager lock files (choose one)
+# Keep package-lock.json for npm
+# yarn.lock
+# pnpm-lock.yaml
 
-# Environment specific
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Monorepo specific
+.turbo/
+.rush/
 
-# Cache
+# Local development files
+.local/
+local/
+dev/
+
+# Telegram Bot specific sensitive data
+telegram-bot-token.txt
+bot-config.json
+user-data/
+bot-storage/
+
+# Any file containing "secret", "key", "token", "password" in name
+*secret*
+*key*
+*token*
+*password*
+*credential*
+
+# But allow certain config files
+!apps/backend/src/config/
+!apps/frontend/src/config/
+
+# Exclude large media files that might be uploaded during testing
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+*.m4v
+*.3gp
+
+# Large image files
+*.tiff
+*.tif
+*.bmp
+*.raw
+*.cr2
+*.nef
+*.orf
+*.sr2
+
+# Large audio files
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+*.m4a
+
+# Archive files that might be created during testing
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+
+# Office files that might be generated
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pptx
+*.ppt
+
+# PDF files
+*.pdf
+
+# Temporary files from various tools
+.sass-cache/
 .cache/
 .parcel-cache/
 .next/
 .nuxt/
+.vuepress/dist/
+.serverless/
+.fusebox/
 
-# Temporary
-tmp/
-temp/
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS X
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*

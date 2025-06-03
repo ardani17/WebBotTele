@@ -1,378 +1,380 @@
-# Cline Development Rules - Telegram Bot Web App
+# Cline Rules untuk Telegram Bot Web Application
 
-## Core Principles
+## Project Overview
+Aplikasi bot telegram dengan web interface menggunakan:
+- Frontend: React + Vite + TypeScript
+- Backend: NestJS + TypeScript  
+- Database: PostgreSQL + Prisma ORM
+- Bot API: Telegram Bot API (local server)
 
-### 1. Mode Isolation Architecture
-- **Single Mode Principle**: Each user can only be in one mode at a time
-- **Feature Isolation**: Features are completely isolated from each other
-- **State Separation**: Each mode maintains its own state management
-- **Command Scope**: Commands are only valid within their respective modes
+## Project Structure Rules
 
-### 2. Access Control System
-- **User Registration**: Only registered Telegram IDs can access the bot
-- **Feature-based Access**: Each feature has its own access control list
-- **Granular Permissions**: Users can have access to specific features only
-- **Owner-only Registration**: Only owners can register new tenants
+### 1. Monorepo Structure
+```
+telegram-bot-web-app/
+├── apps/
+│   ├── frontend/          # React + Vite + TypeScript
+│   └── backend/           # NestJS + TypeScript
+├── packages/
+│   └── shared/            # Shared types, utilities, config
+├── scripts/               # Automation scripts
+├── docs/                  # Documentation
+└── .cline/               # Cline configuration
+```
 
-### 3. Security First
-- **Input Validation**: Always validate and sanitize user inputs
-- **Environment Variables**: Store sensitive data in environment variables
-- **Encryption**: Encrypt sensitive configuration data in database
-- **Audit Logging**: Log all configuration changes and access attempts
-
-## Development Standards
-
-### TypeScript Standards
-- Use TypeScript strict mode (`"strict": true`)
-- Define explicit interfaces for all data structures
-- Use proper type annotations for function parameters and return types
-- Avoid `any` type - use proper typing or `unknown`
-- Use enums for constants and string literals
-
-### Code Organization
-```typescript
-// File structure pattern
+### 2. Frontend Structure (apps/frontend/)
+```
 src/
-├── features/           # Bot feature modules
-├── services/          # Business logic services
-├── shared/            # Shared utilities
-├── config/            # Configuration management
-└── types/             # TypeScript type definitions
+├── components/           # Reusable UI components
+├── pages/               # Page components
+├── hooks/               # Custom React hooks
+├── services/            # API service functions
+├── types/               # TypeScript type definitions
+├── utils/               # Utility functions
+└── styles/              # CSS/styling files
 ```
 
-### Naming Conventions
-- **Files**: kebab-case (e.g., `location-mode.ts`, `user-auth.service.ts`)
-- **Classes**: PascalCase (e.g., `UserService`, `ConfigManager`)
-- **Functions**: camelCase (e.g., `getUserMode`, `checkFeatureAccess`)
-- **Constants**: UPPER_SNAKE_CASE (e.g., `BOT_TOKEN`, `MAX_FILE_SIZE`)
-- **Interfaces**: PascalCase with descriptive names (e.g., `UserModeState`, `BotConfiguration`)
-
-## Bot Feature Development Rules
-
-### 1. Feature Module Structure
-Every bot feature must follow this pattern:
-
-```typescript
-// feature-name-mode.ts
-import TelegramBot from 'node-telegram-bot-api';
-import { checkFeatureAccess } from '../services/feature-access';
-import { userExists } from '../services/user-auth';
-import { setUserMode, getUserMode } from '../../shared/utils/mode-manager';
-import logger from '../../shared/utils/logger';
-
-// Feature-specific interfaces
-interface UserFeatureState {
-  // Define state properties
-}
-
-// In-memory state storage
-const userFeatureStates = new Map<number, UserFeatureState>();
-
-// Main feature handler
-export async function handleFeature(bot: TelegramBot, msg: TelegramBot.Message) {
-  try {
-    const telegramId = msg.from!.id.toString();
-    const userId = msg.from!.id;
-    
-    // 1. Check user registration
-    const exists = await userExists(telegramId);
-    if (!exists) {
-      await bot.sendMessage(msg.chat.id, 'Maaf, Anda tidak terdaftar untuk menggunakan bot ini.');
-      return;
-    }
-    
-    // 2. Check feature access
-    const hasAccess = await checkFeatureAccess(telegramId, 'feature_name');
-    if (!hasAccess) {
-      await bot.sendMessage(msg.chat.id, '❌ Anda tidak memiliki akses ke fitur ini.');
-      return;
-    }
-    
-    // 3. Set user mode
-    setUserMode(userId, 'feature_mode');
-    
-    // 4. Initialize feature state
-    initUserFeatureState(userId);
-    
-    // 5. Send feature instructions
-    await bot.sendMessage(msg.chat.id, 'Feature activated...');
-    
-    logger.info('Feature activated', { telegramId, userId });
-  } catch (error) {
-    logger.error('Feature activation failed', { error, telegramId: msg.from!.id });
-    await bot.sendMessage(msg.chat.id, '❌ Terjadi kesalahan. Tim teknis telah diberitahu.');
-  }
-}
-
-// Register feature handlers
-export function registerFeatureHandlers(bot: TelegramBot) {
-  // Register all command handlers for this feature
-}
+### 3. Backend Structure (apps/backend/)
+```
+src/
+├── auth/                # Authentication module
+├── users/               # User management
+├── telegram/            # Telegram bot logic
+│   ├── features/        # Bot feature services
+│   └── handlers/        # Message handlers
+├── prisma/              # Database service
+└── common/              # Shared backend utilities
 ```
 
-### 2. Command Handler Pattern
+## Code Quality Rules
+
+### 1. TypeScript Rules
+- Selalu gunakan TypeScript dengan strict mode enabled
+- Definisikan interface/type untuk semua data structures
+- Gunakan proper typing untuk function parameters dan return values
+- Avoid `any` type, gunakan `unknown` jika diperlukan
+
+### 2. Error Handling Rules
 ```typescript
-bot.onText(/\/command/, async (msg) => {
-  const userId = msg.from?.id;
-  const chatId = msg.chat.id;
-  
-  if (!userId) return;
-  
-  // 1. Validate user registration
-  const telegramId = userId.toString();
-  const exists = await userExists(telegramId);
-  if (!exists) return;
-  
-  // 2. Validate feature access
-  const hasAccess = await checkFeatureAccess(telegramId, 'feature_name');
-  if (!hasAccess) return;
-  
-  // 3. Validate current mode
-  const currentMode = getUserMode(userId);
-  if (currentMode !== 'expected_mode') {
-    await bot.sendMessage(chatId, 'Anda harus berada dalam mode yang sesuai.');
-    return;
-  }
-  
-  try {
-    // Command implementation
-    logger.info('Command executed', { userId, command: 'command_name' });
-  } catch (error) {
-    logger.error('Command failed', { error, userId, command: 'command_name' });
-    await bot.sendMessage(chatId, 'Terjadi kesalahan saat menjalankan perintah.');
-  }
-});
-```
-
-### 3. State Management Rules
-- Use Map-based in-memory storage for user states
-- Initialize state when user enters mode
-- Clean up state when user exits mode
-- Include timestamp for state expiration
-- Log state changes for debugging
-
-### 4. Error Handling Rules
-- Always wrap main logic in try-catch blocks
-- Log errors with context (userId, operation, parameters)
-- Send user-friendly error messages
-- Never expose internal error details to users
-- Use consistent error message format
-
-### 5. File Handling Rules
-- Support both local Bot API and HTTP download
-- Always validate file types and sizes
-- Use proper file naming with timestamps
-- Clean up temporary files after processing
-- Log file operations for debugging
-
-## Web Development Rules
-
-### 1. React Component Structure
-```typescript
-// Component naming: PascalCase
-interface ComponentProps {
-  // Define props with proper types
+// ✅ Good - Proper error handling
+try {
+  const result = await someAsyncOperation();
+  return result;
+} catch (error) {
+  this.logger.error('Operation failed', error);
+  throw new HttpException('Operation failed', HttpStatus.INTERNAL_SERVER_ERROR);
 }
 
-export const ComponentName: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
-  // Component implementation
-  return (
-    <div className="tailwind-classes">
-      {/* Component JSX */}
-    </div>
-  );
+// ❌ Bad - No error handling
+const result = await someAsyncOperation();
+return result;
+```
+
+### 3. Logging Rules
+```typescript
+// ✅ Good - Structured logging
+this.logger.info('User created', { userId, telegramId });
+this.logger.error('Database operation failed', { error, operation: 'createUser' });
+
+// ❌ Bad - Unstructured logging
+console.log('User created');
+console.error(error);
+```
+
+### 4. Environment Variables Rules
+- Semua konfigurasi harus menggunakan environment variables
+- Provide default values untuk development
+- Validate required environment variables at startup
+
+```typescript
+// ✅ Good
+const config = {
+  port: process.env.PORT || 3001,
+  telegramToken: process.env.TELEGRAM_BOT_TOKEN, // Required
+  databaseUrl: process.env.DATABASE_URL, // Required
 };
+
+// Validate required vars
+if (!config.telegramToken) {
+  throw new Error('TELEGRAM_BOT_TOKEN is required');
+}
 ```
 
-### 2. Tailwind CSS Standards
-- Use utility-first approach
-- Create custom components for repeated patterns
-- Use responsive design classes
-- Follow consistent spacing scale
-- Use semantic color names
+## API Development Rules
 
-### 3. State Management
-- Use React Query for server state
-- Use React Hook Form for form state
-- Use Context API for global app state
-- Avoid prop drilling with proper state placement
-
-### 4. API Integration
-- Use consistent API response formats
-- Implement proper error handling
-- Use loading states for better UX
-- Implement retry mechanisms for failed requests
-
-## Backend Development Rules
-
-### 1. NestJS Structure
+### 1. RESTful API Conventions
 ```typescript
-// Controller pattern
-@Controller('api/feature')
-export class FeatureController {
-  constructor(private readonly featureService: FeatureService) {}
-  
-  @Get()
-  async getFeatures(): Promise<FeatureResponse> {
-    // Implementation
+// ✅ Good - RESTful endpoints
+GET    /api/users           # Get all users
+GET    /api/users/:id       # Get user by ID
+POST   /api/users           # Create user
+PUT    /api/users/:id       # Update user
+DELETE /api/users/:id       # Delete user
+
+// ❌ Bad - Non-RESTful
+GET    /api/getAllUsers
+POST   /api/createNewUser
+```
+
+### 2. DTO (Data Transfer Objects) Rules
+```typescript
+// ✅ Good - Proper DTO with validation
+export class CreateUserDto {
+  @IsString()
+  @IsNotEmpty()
+  telegramId: string;
+
+  @IsString()
+  @IsOptional()
+  username?: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+}
+```
+
+### 3. Response Format Rules
+```typescript
+// ✅ Good - Consistent response format
+{
+  "success": true,
+  "data": { ... },
+  "message": "Operation completed successfully"
+}
+
+// For errors
+{
+  "success": false,
+  "error": "Error message",
+  "code": "ERROR_CODE"
+}
+```
+
+## Database Rules
+
+### 1. Prisma Schema Rules
+```prisma
+// ✅ Good - Proper model definition
+model User {
+  id          String   @id @default(cuid())
+  telegramId  String   @unique
+  username    String?
+  email       String?  @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  locations   Location[]
+  workbooks   Workbook[]
+
+  @@map("users")
+}
+```
+
+### 2. Migration Rules
+- Selalu buat migration untuk schema changes
+- Review migration files sebelum apply
+- Backup database sebelum major migrations
+- Test migrations di development environment dulu
+
+### 3. Query Rules
+```typescript
+// ✅ Good - Efficient query with proper error handling
+async findUserByTelegramId(telegramId: string): Promise<User | null> {
+  try {
+    return await this.prisma.user.findUnique({
+      where: { telegramId },
+      include: {
+        locations: {
+          take: 10,
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+  } catch (error) {
+    this.logger.error('Failed to find user', { telegramId, error });
+    throw error;
   }
 }
-
-// Service pattern
-@Injectable()
-export class FeatureService {
-  // Business logic implementation
-}
 ```
-
-### 2. Database Rules
-- Use Prisma ORM for type-safe database access
-- Define proper relationships between models
-- Use transactions for multi-table operations
-- Implement soft deletes where appropriate
-- Use database migrations for schema changes
-
-### 3. API Design Standards
-- Use RESTful conventions
-- Implement proper HTTP status codes
-- Use consistent response formats
-- Implement pagination for list endpoints
-- Use proper validation decorators
-
-## Configuration Management Rules
-
-### 1. Environment Variables
-- Store all sensitive data in environment variables
-- Use validation for required environment variables
-- Provide default values where appropriate
-- Document all environment variables
-
-### 2. Database Configuration
-- Encrypt sensitive configuration data
-- Implement configuration versioning
-- Provide configuration backup/restore
-- Log all configuration changes
-
-### 3. Multi-tenant Support
-- Separate database per tenant
-- Shared user registry in main database
-- Tenant-specific configuration isolation
-- Proper tenant data segregation
 
 ## Security Rules
 
-### 1. Authentication & Authorization
-- Use JWT tokens for web authentication
-- Implement role-based access control
-- Validate user permissions on every request
-- Use secure session management
+### 1. Authentication Rules
+- Implementasi JWT authentication untuk web interface
+- Validate Telegram webhook dengan secret token
+- Rate limiting untuk API endpoints
+- Input validation untuk semua user inputs
 
-### 2. Data Protection
-- Encrypt sensitive data at rest
-- Use HTTPS for all communications
-- Implement proper input validation
-- Sanitize user inputs to prevent injection attacks
+### 2. Data Sanitization Rules
+```typescript
+// ✅ Good - Sanitize user input
+const sanitizedInput = input.trim().toLowerCase();
+const validatedData = await validateDto(CreateUserDto, sanitizedInput);
+```
 
-### 3. Bot Security
-- Validate Telegram user IDs
-- Implement rate limiting
-- Use webhook validation
-- Secure file upload handling
+### 3. Environment Security Rules
+- Jangan commit secrets ke repository
+- Gunakan .env files untuk development
+- Gunakan proper secret management untuk production
+
+## Bot Development Rules
+
+### 1. Command Handler Rules
+```typescript
+// ✅ Good - Structured command handler
+@Injectable()
+export class LocationService {
+  async handleLocationCommand(telegramId: string, chatId: number): Promise<string> {
+    try {
+      // Validate user
+      const user = await this.validateUser(telegramId);
+      
+      // Initialize feature state
+      this.initUserState(telegramId);
+      
+      // Return help message
+      return this.getLocationHelpMessage();
+    } catch (error) {
+      this.logger.error('Location command failed', { telegramId, error });
+      return 'Terjadi kesalahan. Silakan coba lagi.';
+    }
+  }
+}
+```
+
+### 2. State Management Rules
+- Gunakan in-memory state untuk session data
+- Implement cleanup untuk expired sessions
+- Persist important data ke database
+
+### 3. Message Format Rules
+```typescript
+// ✅ Good - Consistent message format
+return `🗺️ Mode Lokasi Diaktifkan
+
+Perintah yang tersedia:
+• /alamat [alamat] - Mendapatkan koordinat dari alamat
+• /koordinat [lat] [long] - Mendapatkan alamat dari koordinat
+
+Ketik /menu untuk kembali ke menu utama.`;
+```
 
 ## Testing Rules
 
-### 1. Unit Testing
-- Test all business logic functions
+### 1. Unit Testing Rules
+- Test semua service methods
 - Mock external dependencies
-- Use descriptive test names
-- Achieve minimum 80% code coverage
+- Test error scenarios
+- Maintain minimum 80% code coverage
 
-### 2. Integration Testing
-- Test API endpoints
+### 2. Integration Testing Rules
+- Test API endpoints end-to-end
 - Test database operations
-- Test bot command handlers
-- Test file upload/download operations
+- Test bot command flows
 
-### 3. E2E Testing
-- Test critical user workflows
-- Test bot interactions
-- Test web interface functionality
-- Test configuration management
+### 3. E2E Testing Rules
+- Test complete user workflows
+- Test frontend-backend integration
+- Test bot functionality with real Telegram API
 
 ## Performance Rules
 
-### 1. Bot Performance
-- Use efficient state management
-- Implement proper cleanup mechanisms
-- Optimize file processing operations
-- Use connection pooling for database
+### 1. Database Performance
+- Implement proper indexing
+- Use pagination untuk large datasets
+- Optimize N+1 query problems
+- Monitor query performance
 
-### 2. Web Performance
-- Implement code splitting
-- Use lazy loading for components
-- Optimize bundle sizes
-- Implement proper caching strategies
+### 2. API Performance
+- Implement caching where appropriate
+- Use compression for responses
+- Implement rate limiting
+- Monitor response times
 
-### 3. Database Performance
-- Use proper indexing
-- Optimize query performance
-- Implement connection pooling
-- Use read replicas where appropriate
+### 3. Bot Performance
+- Implement queue system untuk heavy operations
+- Add delays untuk rate limiting compliance
+- Optimize file processing workflows
 
 ## Deployment Rules
 
-### 1. Environment Management
-- Use separate environments (dev, staging, prod)
-- Implement proper CI/CD pipelines
-- Use environment-specific configurations
-- Implement proper monitoring and logging
+### 1. Environment Setup
+- Development: Local dengan Docker Compose
+- Staging: Mirror production environment
+- Production: Secure cloud deployment
 
-### 2. Docker Configuration
-- Use multi-stage builds
-- Optimize image sizes
-- Use proper health checks
-- Implement proper secrets management
+### 2. CI/CD Rules
+- Automated testing pada setiap commit
+- Automated deployment ke staging
+- Manual approval untuk production deployment
 
-### 3. Monitoring & Logging
-- Implement structured logging
-- Use proper log levels
+### 3. Monitoring Rules
+- Log semua important operations
 - Monitor application metrics
-- Set up alerting for critical issues
+- Set up alerts untuk critical errors
+- Regular health checks
 
-## Code Review Checklist
+## Documentation Rules
 
-### Before Submitting PR
-- [ ] All tests pass
-- [ ] Code follows naming conventions
-- [ ] Error handling is implemented
-- [ ] Logging is added for important operations
-- [ ] Documentation is updated
-- [ ] Security considerations are addressed
+### 1. Code Documentation
+- Document semua public methods
+- Include usage examples
+- Document complex business logic
+- Keep documentation up-to-date
 
-### During Code Review
-- [ ] Code follows established patterns
-- [ ] Business logic is properly tested
-- [ ] Error scenarios are handled
-- [ ] Performance implications are considered
-- [ ] Security vulnerabilities are checked
-- [ ] Documentation is accurate and complete
+### 2. API Documentation
+- Use Swagger/OpenAPI untuk API docs
+- Include request/response examples
+- Document error codes
+- Provide integration guides
 
-## Maintenance Rules
+### 3. User Documentation
+- Setup guides untuk development
+- Deployment instructions
+- Feature documentation
+- Troubleshooting guides
 
-### 1. Regular Maintenance
-- Update dependencies regularly
-- Monitor security vulnerabilities
-- Clean up unused code and files
-- Review and update documentation
+## File Naming Conventions
 
-### 2. Performance Monitoring
-- Monitor application performance
-- Track user engagement metrics
-- Monitor error rates and response times
-- Implement proper alerting
+### 1. TypeScript Files
+- Services: `user.service.ts`
+- Controllers: `user.controller.ts`
+- DTOs: `create-user.dto.ts`
+- Interfaces: `user.interface.ts`
+- Types: `user.types.ts`
 
-### 3. Backup & Recovery
-- Implement regular database backups
-- Test backup restoration procedures
-- Document recovery procedures
-- Implement disaster recovery plans
+### 2. React Components
+- Components: `UserList.tsx`
+- Pages: `Dashboard.tsx`
+- Hooks: `useUsers.ts`
+- Utils: `api.utils.ts`
+
+### 3. Database Files
+- Migrations: `20231201_create_users_table.sql`
+- Seeds: `users.seed.ts`
+- Schema: `schema.prisma`
+
+## Git Workflow Rules
+
+### 1. Branch Naming
+- Features: `feature/user-management`
+- Bugfixes: `bugfix/login-error`
+- Hotfixes: `hotfix/security-patch`
+
+### 2. Commit Messages
+```
+feat: add user management API
+fix: resolve login authentication issue
+docs: update API documentation
+refactor: optimize database queries
+```
+
+### 3. Pull Request Rules
+- Include description of changes
+- Link related issues
+- Ensure tests pass
+- Request code review
+- Update documentation if needed
